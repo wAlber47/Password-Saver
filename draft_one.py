@@ -5,37 +5,53 @@ import sys
 entries = [["yahoo", "XqffoZeo"], ["google", "CoIushujSetu"]]
 # The password file name to store the data to
 password_file_name = "samplePasswordFile.pickle"
-# The encryption key for the caesar cypher
+# The encryption key for the caesar cipher
 encryption_key = 16
 
 menu_text = """
-What would you like to do:
-1. Open password file
-2. Lookup a password
-3. Add a password
-4. Save password file
-5. Print the encrypted password list (for testing)
+What would you like to do? Please enter number (1-6):
+1. Open Password File
+2. Lookup a Password
+3. Add a Password
+4. Save Password File
+5. Print the Encrypted Password List (Testing Only)
 6. Quit program
-Please enter a number (1-6)"""
+"""
 
 
-def password_encrypt (plaintext, key):
-    """Returns an encrypted message using a caesar cypher
+def password_encrypt(plaintext, key):
+    """Returns an encrypted message using a caesar cipher
 
     :param plaintext (string)
-    :param key (int) The offset to be used for the caesar cypher
+    :param key (int) The offset to be used for the caesar cipher
     :return (string) The encrypted message
     """
+    ciphertext = ""
+    letter = None
     for ch in plaintext:
         if ch.isalpha():
-            stayInAlphabet = ord(ch) + key
-            if stayInAlphabet > ord('z'):
-                stayInAlphabet -= 26
-            final_letter = chr(stayInAlphabet)
-        encrypted = ""
-        encrypted += final_letter
+            letter = ord(ch) + key
+            if letter > ord("z"):
+                letter -= 26
+        ciphertext += chr(letter)
+    return ciphertext
 
-    return encrypted
+
+def password_decrypt(ciphertext, key):
+    """ Returns a decrypted message using the caesar cipher
+
+    :param ciphertext (string)
+    :param key (int) the offset to be used for the cipher
+    :return:
+    """
+    plain = ""
+    for ch in ciphertext:
+        if ch.isalpha():
+            letter = ord(ch) - key
+            if letter < ord("A"):
+                letter += 26
+            plain += chr(letter)
+    return plain
 
 
 def load_password_file(file_name):
@@ -43,7 +59,7 @@ def load_password_file(file_name):
 
     :param file_name (string) The file to load.  Must be a pickle file in the correct format
     """
-    entries, encryption_key = pickle.load(file_name, 'rb')
+    entries, encryption_key = pickle.load(file_name)
 
 
 def save_password_file(file_name):
@@ -61,68 +77,52 @@ def add_entry(website, password):
     :param password (string) The unencrypted password for the entry
     """
     encrypt = password_encrypt(password, encryption_key)
-    new_entry = [encrypt, website]
+    new_entry = [website, encrypt]
     entries.append(new_entry)
 
 
 def lookup_password(website):
     """Lookup the password for a given website
 
-    Logic for function:
-    1. Create a loop that goes through each item in the password list
-     You can consult the reading on lists in Week 5 for ways to loop through a list
-
-    2. Check if the name is found.  To index a list of lists you use 2 square backet sets
-      So passwords[0][1] would mean for the first item in the list get it's 2nd item (remember, lists start at 0)
-      So this would be 'XqffoZeo' in the password list given what is predefined at the top of the page.
-      If you created a loop using the syntax described in step 1, then i is your 'iterator' in the list so you
-      will want to use i in your first set of brackets.
-
-    3. If the name is found then decrypt it.  Decrypting is that exact reverse operation from encrypting.  Take a look at the
-    caesar cypher lecture as a reference.  You do not need to write your own decryption function, you can reuse passwordEncrypt
-
-     Write the above one step at a time.  By this I mean, write step 1...  but in your loop print out every item in the list
-     for testing purposes.  Then write step 2, and print out the password but not decrypted.  Then write step 3.  This way
-     you can test easily along the way.
-
     :param website (string) The website for the entry to lookup
     :return: Returns an unencrypted password.  Returns None if no entry is found
     """
-    #Fill in your code here
-    pass
+    ciphertext = ""
+    for i in range(len(entries)):
+        if entries[i][0] == website.lower():
+            ciphertext = entries[i][1]
+    return password_decrypt(ciphertext, encryption_key)
 
 
 while True:
     print(menu_text)
     choice = input()
 
-    if choice == '1': # Load the password list from a file
+    if choice == '1':  # Load the password list from a file
         load_password_file(password_file_name)
 
     if choice == '2':  # Lookup at password
         print("Which website do you want to lookup the password for: ")
         for key_value in entries:
-            print(key_value[0])
+            print(key_value[0].title())
         website = input()
         password = lookup_password(website)
         if password:
             print('The password is: ', password)
         else:
-            print('Password not found')
+            print('Password Not Found')
 
     if choice == '3':  # Add a new entry
-        print("What website is this password for: ")
-        website = input()
-        print("What is the password?")
-        unencrypted_password = input()
-        add_entry(website, password)
+        website = input("What website is this password for: ")
+        unencrypted_password = input("What is the password: ")
+        add_entry(website, unencrypted_password)
 
     if choice == '4':  # Save the passwords to a file
         save_password_file(password_file_name)
 
-    if choice == '5': #print out the password list
+    if choice == '5':  # Print out the password list
         for key_value in entries:
             print(', '.join(key_value))
 
-    if choice == '6':  # Quit our program
+    if choice == '6':  # Quit program
         sys.exit()
