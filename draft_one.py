@@ -2,9 +2,9 @@ import pickle
 import sys
 
 # The password list - We start with it populated for testing purposes
-entries = [["yahoo", "XqffoZeo"], ["google", "CoIushujSetu"]]
+entries = []
 # The password file name to store the data to
-password_file_name = "samplePasswordFile.pickle"
+password_file_name = "PasswordFile.pickle"
 # The encryption key for the caesar cipher
 encryption_key = 16
 
@@ -27,15 +27,25 @@ def password_encrypt(plaintext, key):
     :return (string) The encrypted message
     """
     ciphertext = ""
-    letter = None
     for ch in plaintext:
         if ch.isalpha():
-            letter = ord(ch) + key
-            if letter > ord("z"):
-                letter -= 26
-        ciphertext += chr(letter)
-    return ciphertext
+            num = ord(ch)
+            num += key
 
+            if ch.isupper():
+                if num > ord("Z"):
+                    num -= 26
+                elif num < ord("A"):
+                    num += 26
+            elif ch.islower():
+                if num > ord("z"):
+                    num -= 26
+                elif num < ord("a"):
+                    num += 26
+            ciphertext += chr(num)
+        else:  # ch is not letter
+            ciphertext += ch
+    return ciphertext
 
 def password_decrypt(ciphertext, key):
     """ Returns a decrypted message using the caesar cipher
@@ -44,14 +54,8 @@ def password_decrypt(ciphertext, key):
     :param key (int) the offset to be used for the cipher
     :return:
     """
-    plain = ""
-    for ch in ciphertext:
-        if ch.isalpha():
-            letter = ord(ch) - key
-            if letter < ord("A"):
-                letter += 26
-            plain += chr(letter)
-    return plain
+    r_key = -key
+    return password_encrypt(ciphertext, r_key)
 
 
 def load_password_file(file_name):
@@ -59,7 +63,10 @@ def load_password_file(file_name):
 
     :param file_name (string) The file to load.  Must be a pickle file in the correct format
     """
-    entries, encryption_key = pickle.load(file_name)
+    try:
+        entries, encryption_key = pickle.load(open(file_name, "rb"))
+    except FileNotFoundError:
+        print("File Not Found.")
 
 
 def save_password_file(file_name):
@@ -67,7 +74,7 @@ def save_password_file(file_name):
 
     :param file_name (string) The file to save.
     """
-    pickle.dump( (entries, encryption_key), open( file_name, "wb" ) )
+    pickle.dump((entries, encryption_key), open(file_name, "wb"))
 
 
 def add_entry(website, password):
@@ -102,19 +109,19 @@ while True:
         load_password_file(password_file_name)
 
     if choice == '2':  # Lookup at password
-        print("Which website do you want to lookup the password for: ")
+        print("WEBSITE: ")
         for key_value in entries:
             print(key_value[0].title())
         website = input()
         password = lookup_password(website)
         if password:
-            print('The password is: ', password)
+            print('PASSWORD: ', password)
         else:
             print('Password Not Found')
 
     if choice == '3':  # Add a new entry
-        website = input("What website is this password for: ")
-        unencrypted_password = input("What is the password: ")
+        website = input("WEBSITE: ")
+        unencrypted_password = input("PASSWORD: ")
         add_entry(website, unencrypted_password)
 
     if choice == '4':  # Save the passwords to a file
